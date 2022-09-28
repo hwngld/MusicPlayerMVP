@@ -89,7 +89,6 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
         mainPresenter.loadDataToSongList(this)
         setOnCLickView()
 
-
     }
 
     private fun setOnCLickView() {
@@ -149,7 +148,7 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
         } else {
             currentPositionSong++
         }
-        if (mainPresenter.getIsShuffle() == true) {
+        if (mainPresenter.isShuffle()) {
             currentPositionSong = Random().nextInt(currentPlayList.size)
         }
         sendPlayBroadcast()
@@ -161,7 +160,7 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
         } else {
             currentPositionSong--
         }
-        if (mainPresenter.getIsShuffle() == true) {
+        if (mainPresenter.isShuffle()) {
             currentPositionSong = Random().nextInt(currentPlayList.size)
         }
         sendPlayBroadcast()
@@ -185,7 +184,7 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
         } catch (_: java.lang.Exception) {
             nextSong()
         }
-        mainPresenter.setIsPlaying(true)
+        mainPresenter.setPlaying(true)
         showMiniPlayer()
         updatePlayer(song)
         setOnCompletePlaySong()
@@ -218,10 +217,10 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
     private fun pauseOrResume() {
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
-            mainPresenter.setIsPlaying(false)
+            mainPresenter.setPlaying(false)
         } else {
             mediaPlayer.start()
-            mainPresenter.setIsPlaying(true)
+            mainPresenter.setPlaying(true)
         }
         setImagePlayResource()
 
@@ -236,7 +235,7 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
 
     private fun setOnCompletePlaySong() {
         mediaPlayer.setOnCompletionListener {
-            if (mainPresenter.getIsRepeat()!!) {
+            if (mainPresenter.isRepeat()) {
                 sendPlayBroadcast()
             } else {
                 nextSong()
@@ -264,6 +263,7 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
         intentService.putExtra("currentSong", currentSong)
         startService(intentService)
         sendPlayBroadcast()
+        mainPresenter.setPositionSong(position)
     }
 
     override fun onResume() {
@@ -274,12 +274,11 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(musicReceiver)
-        if (!mediaPlayer.isPlaying) {
-            DataManager.setPosition(-1)
-            DataManager.setIsPlaying(false)
-        }
+        mainPresenter.setPlaying(false)
+        mainPresenter.setPositionSong(-1)
         mediaPlayer.stop()
         mediaPlayer.release()
+
         stopService(Intent(this, PlaySongService::class.java))
     }
 

@@ -1,6 +1,5 @@
 package com.sildev.musicplayer
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -15,7 +14,6 @@ import java.util.regex.Pattern
 
 
 object MusicPlayerHelper {
-    @SuppressLint("Recycle")
     fun fetchSongFromStorage(context: Context): List<Song> {
         val songList: MutableList<Song> = ArrayList()
         val proj = arrayOf(
@@ -36,24 +34,22 @@ object MusicPlayerHelper {
                 do {
                     val audioId = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
                     val audioTitle = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                    val audioartist =
+                    val audioArtist =
                         audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                    val audioduration =
+                    val audioDuration =
                         audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                    val audiodata = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-                    val albumid = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                    val audioData = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+                    val albumId = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                     val album = audioCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-                    var duration = 0
-                    if (audioCursor.getString(audioduration) != null) {
-                        duration = audioCursor.getString(audioduration).toInt()
-                        if (duration > 15000) {
-                            val song = Song()
-                            song.id = audioCursor.getLong(audioId)
+                    val duration = audioCursor.getString(audioDuration)
+                    if (duration != null) {
+                        if (duration.toInt() > 15000) {
+                            val song = Song(audioCursor.getLong(audioId))
                             song.name = audioCursor.getString(audioTitle)
-                            song.singer = audioCursor.getString(audioartist)
-                            song.path = audioCursor.getString(audiodata)
-                            song.duration = duration
-                            song.albumId = audioCursor.getLong(albumid)
+                            song.singer = audioCursor.getString(audioArtist)
+                            song.path = audioCursor.getString(audioData)
+                            song.duration = duration.toInt()
+                            song.albumId = audioCursor.getLong(albumId)
                             song.album = audioCursor.getString(album)
                             songList.add(song)
                         }

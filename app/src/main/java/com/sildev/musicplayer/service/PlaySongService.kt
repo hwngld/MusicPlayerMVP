@@ -13,6 +13,7 @@ import android.media.MediaMetadata
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.sildev.musicplayer.*
@@ -45,9 +46,7 @@ class PlaySongService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        if (intent != null) {
-            currentSong = intent.getSerializableExtra("currentSong") as Song
-        }
+        currentSong = intent?.getSerializableExtra("currentSong") as Song
         showNotification()
 
         val intentFilter = IntentFilter()
@@ -71,7 +70,7 @@ class PlaySongService : Service() {
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, song.singer).build()
         )
         val iconPlayPause =
-            if (DataManager.getIsPlaying() == true) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+            if (DataManager.isPlaying()) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
         mBuilder.addAction(
             android.R.drawable.ic_media_previous, "rw30", pendingIntentMusic(
                 ACTION_PREVIOUS, PREVIOUS_INTENT_REQUEST_CODE
@@ -120,7 +119,6 @@ class PlaySongService : Service() {
             MediaMetadataCompat.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, song.name)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, song.singer).build()
         )
-
         mBuilder.addAction(
             android.R.drawable.ic_media_previous, "rw30", pendingIntentMusic(
                 ACTION_PREVIOUS, PREVIOUS_INTENT_REQUEST_CODE

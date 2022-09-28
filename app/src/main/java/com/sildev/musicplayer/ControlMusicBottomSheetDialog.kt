@@ -31,6 +31,7 @@ class ControlMusicBottomSheetDialog(
     private lateinit var sbTime: SeekBar
     private lateinit var imgBack: ImageView
     lateinit var mediaPlayer: MediaPlayer
+
     init {
         setContentView(view)
         val behavior = this.behavior
@@ -44,7 +45,7 @@ class ControlMusicBottomSheetDialog(
     }
 
     private fun setIconShuffle() {
-        if (mainPresenter.getIsShuffle() == true) {
+        if (mainPresenter.isShuffle()) {
             imgShuffle.setImageResource(R.drawable.ic_shuffle)
         } else {
             imgShuffle.setImageResource(R.drawable.ic_not_shuffle)
@@ -52,7 +53,7 @@ class ControlMusicBottomSheetDialog(
     }
 
     private fun setIconRepeat() {
-        if (mainPresenter.getIsRepeat() == true) {
+        if (mainPresenter.isRepeat()) {
             imgRepeat.setImageResource(R.drawable.ic_repeat_once)
         } else {
             imgRepeat.setImageResource(R.drawable.ic_repeat)
@@ -61,11 +62,11 @@ class ControlMusicBottomSheetDialog(
 
     private fun setOnClickView() {
         imgRepeat.setOnClickListener {
-            mainPresenter.setIsRepeat()
+            mainPresenter.setRepeat()
             setIconRepeat()
         }
         imgShuffle.setOnClickListener {
-            mainPresenter.setIsShuffle()
+            mainPresenter.setShuffle()
             setIconShuffle()
         }
         imgPrevious.setOnClickListener {

@@ -7,18 +7,18 @@ import com.sildev.musicplayer.datalocal.DataManager
 class MainPresenter(private val mainInterface: MainInterface) {
 
     fun showOrHideMiniPlayer() {
-        if (getPositionSong()!! >= 0) {
+        if (getPositionSong() >= 0) {
             mainInterface.showMiniPlayer()
         } else {
             mainInterface.hideMiniPlayer()
         }
     }
 
-    fun setIsPlaying(isPlaying: Boolean) {
-        DataManager.setIsPlaying(isPlaying)
+    fun setPlaying(isPlaying: Boolean) {
+        DataManager.setPlaying(isPlaying)
     }
 
-    private fun getPositionSong(): Int? {
+    private fun getPositionSong(): Int {
         return DataManager.getPosition()
     }
 
@@ -27,24 +27,27 @@ class MainPresenter(private val mainInterface: MainInterface) {
         mainInterface.setDataToSongList(songList)
     }
 
-    fun setIsRepeat() {
-        val isRepeat = getIsRepeat()
-        DataManager.setRepeat(!isRepeat!!)
+    fun setRepeat() {
+        val isRepeat = !isRepeat()
+        DataManager.setRepeat(isRepeat)
     }
 
-    fun getIsRepeat(): Boolean? {
+    fun isRepeat(): Boolean {
         return DataManager.getRepeat()
 
     }
 
-    fun setIsShuffle() {
-        val isShuffle = getIsShuffle()
-        DataManager.setShuffle(!isShuffle!!)
+    fun setShuffle() {
+        val isShuffle = !isShuffle()
+        DataManager.setShuffle(isShuffle)
     }
 
-    fun getIsShuffle(): Boolean? {
+    fun isShuffle(): Boolean {
         return DataManager.getShuffle()
+    }
 
+    fun setPositionSong(position: Int) {
+        DataManager.setPosition(position)
     }
 
 }

@@ -26,36 +26,52 @@ object DataManager {
     }
 
     fun setPosition(position: Int) {
-        DataManager.getInstance()?.initPreferences?.setInt(POSITION_SONG_KEY, position)
+        getInstance()?.initPreferences?.setInt(POSITION_SONG_KEY, position)
     }
 
-    fun getPosition(): Int? {
-        return DataManager.getInstance()?.initPreferences?.getInt(POSITION_SONG_KEY)
+    fun getPosition(): Int {
+        val position = getInstance()?.initPreferences?.getInt(POSITION_SONG_KEY)
+        if (position != null) {
+            return position
+        }
+        return -1
     }
 
 
     fun setShuffle(isShuffle: Boolean) {
-        DataManager.getInstance()?.initPreferences?.putBoolean(IS_SHUFFLE_KEY, isShuffle)
+        getInstance()?.initPreferences?.putBoolean(IS_SHUFFLE_KEY, isShuffle)
     }
 
-    fun getShuffle(): Boolean? {
-        return DataManager.getInstance()?.initPreferences?.getBoolean(IS_SHUFFLE_KEY)
+    fun getShuffle(): Boolean {
+        val shuffle = getInstance()?.initPreferences?.getBoolean(IS_SHUFFLE_KEY)
+        if (shuffle != null) {
+            return shuffle
+        }
+        return false
     }
 
     fun setRepeat(isShuffle: Boolean) {
-        DataManager.getInstance()?.initPreferences?.putBoolean(IS_REPEAT_KEY, isShuffle)
+        getInstance()?.initPreferences?.putBoolean(IS_REPEAT_KEY, isShuffle)
     }
 
-    fun getRepeat(): Boolean? {
-        return DataManager.getInstance()?.initPreferences?.getBoolean(IS_REPEAT_KEY)
+    fun getRepeat(): Boolean {
+        val repeat = getInstance()?.initPreferences?.getBoolean(IS_REPEAT_KEY)
+        if (repeat != null) {
+            return repeat
+        }
+        return false
     }
 
-    fun setIsPlaying(isPlaying: Boolean) {
-        DataManager.getInstance()?.initPreferences?.putBoolean(IS_PLAYING_KEY, isPlaying)
+    fun setPlaying(isPlaying: Boolean) {
+        getInstance()?.initPreferences?.putBoolean(IS_PLAYING_KEY, isPlaying)
     }
 
-    fun getIsPlaying(): Boolean? {
-        return DataManager.getInstance()?.initPreferences?.getBoolean(IS_PLAYING_KEY)
+    fun isPlaying(): Boolean {
+        val playing = getInstance()?.initPreferences?.getBoolean(IS_PLAYING_KEY)
+        if (playing != null) {
+            return playing
+        }
+        return false
     }
 
 

@@ -3,8 +3,7 @@ package com.sildev.musicplayer.model
 
 import java.io.Serializable
 
-class Song : Serializable {
-    var id: Long = -1
+class Song(val id: Long) : Serializable {
     var name: String = ""
     var singer: String = ""
     var path: String = ""
