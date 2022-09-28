@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.sildev.musicplayer.PERMISSIONS
 import com.sildev.musicplayer.R
 import com.sildev.musicplayer.REQUEST_PERMISSION_READ_STORAGE
 
@@ -25,7 +24,7 @@ class SplashActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun checkPermission() {
-        if (checkSelfPermission(PERMISSIONS) != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(
                 arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                 REQUEST_PERMISSION_READ_STORAGE

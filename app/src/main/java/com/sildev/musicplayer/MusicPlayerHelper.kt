@@ -71,14 +71,16 @@ object MusicPlayerHelper {
 
     fun removeAccent(s: String): String {
         val temp = Normalizer.normalize(s, Normalizer.Form.NFD)
-        val pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+")
-        return pattern.matcher(temp).replaceAll("").lowercase(Locale.getDefault())
+        return patternAccent.matcher(temp).replaceAll("").lowercase(Locale.getDefault())
     }
 
-    fun getBitmapSong(path: String): Bitmap {
+    fun getBitmapSong(path: String): Bitmap? {
         val mmr = MediaMetadataRetriever()
         mmr.setDataSource(Uri.parse(path).toString())
         val byteImage = mmr.embeddedPicture
-        return BitmapFactory.decodeByteArray(byteImage, 0, byteImage!!.size)
+        if (byteImage != null) {
+            return BitmapFactory.decodeByteArray(byteImage, 0, byteImage.size)
+        }
+        return null
     }
 }

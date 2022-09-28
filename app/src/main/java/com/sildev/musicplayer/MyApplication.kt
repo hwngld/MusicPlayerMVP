@@ -10,16 +10,6 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         DataManager.initManager(applicationContext)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                MUSIC_CHANNEL_ID,
-                getString(R.string.app_name),
-                NotificationManager.IMPORTANCE_LOW
-            )
-            channel.description = "Music player"
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
-        }
     }
 
 }

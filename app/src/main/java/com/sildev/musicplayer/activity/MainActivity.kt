@@ -7,42 +7,32 @@ import android.content.IntentFilter
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.appbar.MaterialToolbar
 import com.sildev.musicplayer.*
 import com.sildev.musicplayer.MusicPlayerHelper.getBitmapSong
 import com.sildev.musicplayer.adapter.SongAdapter
-import com.sildev.musicplayer.datalocal.DataManager
+import com.sildev.musicplayer.databinding.ActivityMainBinding
 import com.sildev.musicplayer.model.Song
-import com.sildev.musicplayer.presenter.MainInterface
+import com.sildev.musicplayer.presenter.MainContract
 import com.sildev.musicplayer.presenter.MainPresenter
 import com.sildev.musicplayer.service.PlaySongService
 import java.util.*
 
-class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongItem,
+class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickSongItem,
     SearchView.OnQueryTextListener {
 
     private var backPressTime: Long = 0
-    private lateinit var imgPauseResume: ImageView
-    private lateinit var imgSong: ImageView
-    private lateinit var imgNext: ImageView
-    private lateinit var imgPrevious: ImageView
-    private lateinit var tvTitleSong: TextView
-    private lateinit var tvSinger: TextView
-    private lateinit var layoutPlayer: LinearLayout
-    private lateinit var recyclerViewSong: RecyclerView
     private lateinit var controlMusicBottomSheetDialog: ControlMusicBottomSheetDialog
-    private lateinit var songToolbar: MaterialToolbar
     private lateinit var songAdapter: SongAdapter
     private lateinit var songSearchView: SearchView
+    private val mainBinding: ActivityMainBinding by lazy {
+        ActivityMainBinding.inflate(
+            layoutInflater
+        )
+    }
 
     private var currentPlayList: List<Song> = ArrayList()
     private var currentPositionSong: Int = -1
@@ -82,32 +72,32 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(mainBinding.root)
         initUI()
         songAdapter = SongAdapter(this)
-        recyclerViewSong.adapter = songAdapter
+        mainBinding.recyclerviewSong.adapter = songAdapter
         mainPresenter.loadDataToSongList(this)
         setOnCLickView()
 
     }
 
     private fun setOnCLickView() {
-        imgPauseResume.setOnClickListener {
+        mainBinding.imagePauseResume.setOnClickListener {
             sendPauseResumeBroadcast()
         }
 
-        layoutPlayer.setOnClickListener {
+        mainBinding.layoutPlayer.setOnClickListener {
             controlMusicBottomSheetDialog.show()
             controlMusicBottomSheetDialog.updateSong(currentPlayList[currentPositionSong])
             controlMusicBottomSheetDialog.updateCurrentTime(mediaPlayer.currentPosition)
         }
-        imgPrevious.setOnClickListener {
+        mainBinding.imagePrevious.setOnClickListener {
             previousSong()
         }
-        imgNext.setOnClickListener {
+        mainBinding.imageNext.setOnClickListener {
             nextSong()
         }
-        songToolbar.setOnMenuItemClickListener {
+        mainBinding.toolbarSong.setOnMenuItemClickListener {
             if (it.itemId == R.id.item_search) {
                 songSearchView = it.actionView as SearchView
                 songSearchView.setOnQueryTextListener(this)
@@ -125,21 +115,11 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
             R.drawable.ic_play
         }
         controlMusicBottomSheetDialog.setIconPauseResume(icon)
-        imgPauseResume.setImageResource(icon)
+        mainBinding.imagePauseResume.setImageResource(icon)
     }
 
     private fun initUI() {
-        imgPauseResume = findViewById(R.id.image_pause_resume)
-        imgSong = findViewById(R.id.image_song)
-        tvSinger = findViewById(R.id.text_singer)
-        tvTitleSong = findViewById(R.id.text_title)
-        layoutPlayer = findViewById(R.id.layout_player)
-        imgNext = findViewById(R.id.image_next)
-        imgPrevious = findViewById(R.id.image_previous)
-        recyclerViewSong = findViewById(R.id.recyclerview_song)
-        songToolbar = findViewById(R.id.toolbar_song)
-        val view: View = LayoutInflater.from(this).inflate(R.layout.bottomsheet_control_music, null)
-        controlMusicBottomSheetDialog = ControlMusicBottomSheetDialog(view, this, mainPresenter)
+        controlMusicBottomSheetDialog = ControlMusicBottomSheetDialog(this, mainPresenter)
     }
 
     private fun nextSong() {
@@ -175,13 +155,12 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
 
     fun playSong() {
         val song = currentPlayList[currentPositionSong]
-        mediaPlayer.release()
-        mediaPlayer = MediaPlayer()
+        mediaPlayer.reset()
         try {
             mediaPlayer.setDataSource(song.path)
             mediaPlayer.prepare()
             mediaPlayer.start()
-        } catch (_: java.lang.Exception) {
+        } catch (e: java.lang.Exception) {
             nextSong()
         }
         mainPresenter.setPlaying(true)
@@ -193,16 +172,16 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
 
     private fun updatePlayer(song: Song) {
         try {
-            imgSong.setImageBitmap(getBitmapSong(song.path))
+            mainBinding.imageSong.setImageBitmap(getBitmapSong(song.path))
         } catch (e: java.lang.Exception) {
-            imgSong.setImageResource(R.drawable.ic_music)
+            mainBinding.imageSong.setImageResource(R.drawable.ic_music)
         }
-        tvSinger.text = song.singer
-        tvTitleSong.text = song.name
+        mainBinding.textSinger.text = song.singer
+        mainBinding.textTitle.text = song.name
         setImagePlayResource()
 
         controlMusicBottomSheetDialog.updateSong(song)
-        val handlerUpdateSongTime: Handler = Handler()
+        val handlerUpdateSongTime = Handler()
         handlerUpdateSongTime.postDelayed(object : Runnable {
             override fun run() {
                 controlMusicBottomSheetDialog.updateCurrentTime(mediaPlayer.currentPosition)
@@ -210,7 +189,6 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
             }
 
         }, 1)
-
 
     }
 
@@ -244,11 +222,11 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
     }
 
     override fun showMiniPlayer() {
-        layoutPlayer.visibility = View.VISIBLE
+        mainBinding.layoutPlayer.visibility = View.VISIBLE
     }
 
     override fun hideMiniPlayer() {
-        layoutPlayer.visibility = View.GONE
+        mainBinding.layoutPlayer.visibility = View.GONE
     }
 
     override fun setDataToSongList(list: List<Song>) {
@@ -278,7 +256,6 @@ class MainActivity : AppCompatActivity(), MainInterface, SongAdapter.IClickSongI
         mainPresenter.setPositionSong(-1)
         mediaPlayer.stop()
         mediaPlayer.release()
-
         stopService(Intent(this, PlaySongService::class.java))
     }
 

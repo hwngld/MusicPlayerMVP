@@ -1,8 +1,6 @@
 package com.sildev.musicplayer.service
 
-import android.app.Notification
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,10 +8,10 @@ import android.content.IntentFilter
 import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.media.MediaMetadata
+import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.sildev.musicplayer.*
@@ -47,6 +45,16 @@ class PlaySongService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         currentSong = intent?.getSerializableExtra("currentSong") as Song
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                MUSIC_CHANNEL_ID,
+                getString(R.string.app_name),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            channel.description = "Music player"
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
         showNotification()
 
         val intentFilter = IntentFilter()
@@ -61,6 +69,15 @@ class PlaySongService : Service() {
     }
 
     private fun updateNotification() {
+        NotificationManagerCompat.from(this)
+            .notify(FOREGROUND_SERVICE_ID, customNotification().build())
+    }
+
+    private fun showNotification() {
+        startForeground(FOREGROUND_SERVICE_ID, customNotification().build())
+    }
+
+    private fun customNotification(): NotificationCompat.Builder {
         val song: Song = currentSong
         val mBuilder: NotificationCompat.Builder =
             NotificationCompat.Builder(this, MUSIC_CHANNEL_ID)
@@ -95,68 +112,23 @@ class PlaySongService : Service() {
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setShowActionsInCompactView(0, 1, 2)
                     .setMediaSession(mMediaSessionCompat.sessionToken)
-            ).setContentTitle(song.name).setContentText(song.singer)
-            .setSmallIcon(R.drawable.ic_music).setPriority(Notification.PRIORITY_DEFAULT)
+            ).setContentTitle(song.name)
+            .setContentText(song.singer)
+            .setSmallIcon(R.drawable.ic_music)
+            .setPriority(Notification.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntentResume())
         try {
             mBuilder.setLargeIcon(getBitmapSong(song.path))
-        } catch (_: java.lang.Exception) {
+        } catch (e: java.lang.Exception) {
             mBuilder.setLargeIcon(
                 BitmapFactory.decodeResource(
                     Resources.getSystem(), R.drawable.ic_music
                 )
             )
         }
-        NotificationManagerCompat.from(this).notify(FOREGROUND_SERVICE_ID, mBuilder.build())
+        return mBuilder
     }
 
-    private fun showNotification() {
-        val song: Song = currentSong
-        val mBuilder: NotificationCompat.Builder =
-            NotificationCompat.Builder(this, MUSIC_CHANNEL_ID)
-        val mMediaSessionCompat = MediaSessionCompat(this, "12313")
-        mMediaSessionCompat.setMetadata(
-            MediaMetadataCompat.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, song.name)
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, song.singer).build()
-        )
-        mBuilder.addAction(
-            android.R.drawable.ic_media_previous, "rw30", pendingIntentMusic(
-                ACTION_PREVIOUS, PREVIOUS_INTENT_REQUEST_CODE
-            )
-        )
-            .addAction(
-                android.R.drawable.ic_media_pause, "Pause", pendingIntentMusic(
-                    ACTION_PAUSE,
-                    PAUSE_INTENT_REQUEST_CODE
-                )
-            )
-            .addAction(
-                android.R.drawable.ic_media_next,
-                "ff30",
-                pendingIntentMusic(ACTION_NEXT, NEXT_INTENT_REQUEST_CODE)
-            )
-            .addAction(
-                android.R.drawable.ic_menu_close_clear_cancel, "Stop", pendingIntentMusic(
-                    ACTION_STOP, STOP_INTENT_REQUEST_CODE
-                )
-            ).setStyle(
-                androidx.media.app.NotificationCompat.MediaStyle()
-                    .setShowActionsInCompactView(0, 1, 2)
-                    .setMediaSession(mMediaSessionCompat.sessionToken)
-            ).setContentTitle(song.name).setContentText(song.singer)
-            .setSmallIcon(R.drawable.ic_music).setPriority(Notification.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntentResume())
-        try {
-            mBuilder.setLargeIcon(getBitmapSong(song.path))
-        } catch (_: java.lang.Exception) {
-            mBuilder.setLargeIcon(
-                BitmapFactory.decodeResource(
-                    Resources.getSystem(), R.drawable.ic_music
-                )
-            )
-        }
-        startForeground(FOREGROUND_SERVICE_ID, mBuilder.build())
-    }
 
     private fun pendingIntentMusic(action: String, requestCode: Int): PendingIntent? {
         val intent = Intent()
@@ -177,7 +149,8 @@ class PlaySongService : Service() {
 
     override fun onDestroy() {
         stopForeground(true)
-        super.onDestroy()
         unregisterReceiver(broadcastReceiver)
+        super.onDestroy()
+
     }
 }
