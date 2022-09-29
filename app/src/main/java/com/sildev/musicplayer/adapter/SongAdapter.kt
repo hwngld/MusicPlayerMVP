@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sildev.musicplayer.MusicPlayerHelper.getBitmapSong
 import com.sildev.musicplayer.MusicPlayerHelper.removeAccent
 import com.sildev.musicplayer.R
+import com.sildev.musicplayer.databinding.ItemSongBinding
 import com.sildev.musicplayer.model.Song
 
 
@@ -23,22 +24,21 @@ class SongAdapter(private val iClickSongItem: IClickSongItem) :
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
-        val view: View =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_song, parent, false)
-        return SongViewHolder(view)
+        val binding = ItemSongBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return SongViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
         val song: Song = resultSongList[position]
-        holder.tvSongTitle.text = song.name
-        holder.tvSinger.text = song.singer
-        holder.itemView.setOnClickListener {
+        holder.itemBinding.textTitle.text = song.name
+        holder.itemBinding.textSinger.text = song.singer
+        holder.itemBinding.root.setOnClickListener {
             iClickSongItem.onClickItem(_listSong.indexOf(song))
         }
         try {
-            holder.imgSong.setImageBitmap(getBitmapSong(song.path))
+            holder.itemBinding.imageSong.setImageBitmap(getBitmapSong(song.path))
         } catch (e: java.lang.Exception) {
-            holder.imgSong.setImageResource(R.drawable.ic_music)
+            holder.itemBinding.imageSong.setImageResource(R.drawable.ic_music)
         }
     }
 
@@ -65,16 +65,8 @@ class SongAdapter(private val iClickSongItem: IClickSongItem) :
         return resultSongList.size
     }
 
-    class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var imgSong: ImageView
-        var tvSongTitle: TextView
-        var tvSinger: TextView
+    class SongViewHolder(val itemBinding: ItemSongBinding) :
+        RecyclerView.ViewHolder(itemBinding.root) {
 
-        init {
-            imgSong = itemView.findViewById(R.id.image_song)
-            tvSongTitle = itemView.findViewById(R.id.text_title)
-            tvSinger = itemView.findViewById(R.id.text_singer)
-
-        }
     }
 }
