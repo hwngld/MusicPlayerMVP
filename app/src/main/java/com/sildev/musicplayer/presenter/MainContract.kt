@@ -19,8 +19,7 @@ interface MainContract {
     interface View {
         fun showMiniPlayer()
         fun hideMiniPlayer()
-        fun setDataToSongList(list: List<Song>)
+        fun showListSong(list: MutableList<Song>)
     }
 
 }
-

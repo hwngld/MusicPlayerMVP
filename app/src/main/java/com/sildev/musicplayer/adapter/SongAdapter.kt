@@ -1,11 +1,9 @@
 package com.sildev.musicplayer.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.sildev.musicplayer.MusicPlayerHelper.getBitmapSong
 import com.sildev.musicplayer.MusicPlayerHelper.removeAccent
 import com.sildev.musicplayer.R
@@ -13,14 +11,11 @@ import com.sildev.musicplayer.databinding.ItemSongBinding
 import com.sildev.musicplayer.model.Song
 
 
-class SongAdapter(private val iClickSongItem: IClickSongItem) :
+class SongAdapter(private val onClickItem: (Int) -> Unit) :
     RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
-    interface IClickSongItem {
-        fun onClickItem(position: Int)
-    }
 
     private var _listSong: List<Song> = ArrayList()
-    private var resultSongList: MutableList<Song> = ArrayList()
+    private var resultSongList = mutableListOf<Song>()
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
@@ -30,16 +25,17 @@ class SongAdapter(private val iClickSongItem: IClickSongItem) :
 
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
         val song: Song = resultSongList[position]
-        holder.itemBinding.textTitle.text = song.name
-        holder.itemBinding.textSinger.text = song.singer
-        holder.itemBinding.root.setOnClickListener {
-            iClickSongItem.onClickItem(_listSong.indexOf(song))
+        holder.apply {
+            itemBinding.textTitle.text = song.name
+            itemBinding.textSinger.text = song.singer
+            itemBinding.root.setOnClickListener {
+                onClickItem(position)
+            }
+            Glide.with(itemView.context).load(getBitmapSong(song.path))
+                .placeholder(R.drawable.ic_music).into(itemBinding.imageSong)
         }
-        try {
-            holder.itemBinding.imageSong.setImageBitmap(getBitmapSong(song.path))
-        } catch (e: java.lang.Exception) {
-            holder.itemBinding.imageSong.setImageResource(R.drawable.ic_music)
-        }
+
+
     }
 
     fun setDataToList(listSong: List<Song>) {
@@ -51,8 +47,10 @@ class SongAdapter(private val iClickSongItem: IClickSongItem) :
     fun searchSong(key: String) {
         resultSongList = ArrayList()
         for (song in _listSong) {
-            if (removeAccent(song.name).contains(removeAccent(key), true)
-                || removeAccent(song.singer).contains(removeAccent(key), true)
+            if (removeAccent(song.name).contains(
+                    removeAccent(key),
+                    true
+                ) || removeAccent(song.singer).contains(removeAccent(key), true)
             ) {
                 resultSongList.add(song)
             }

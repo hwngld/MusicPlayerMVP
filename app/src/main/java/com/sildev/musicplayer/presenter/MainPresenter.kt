@@ -24,7 +24,7 @@ class MainPresenter(private val mainView: MainContract.View) : MainContract.Pres
 
     override fun loadDataToSongList(context: Context) {
         val songList = MusicPlayerHelper.fetchSongFromStorage(context)
-        mainView.setDataToSongList(songList)
+        mainView.showListSong(songList)
     }
 
     override fun setRepeat() {
