@@ -3,6 +3,7 @@ package com.sildev.musicplayer.presenter
 import android.content.Context
 import com.sildev.musicplayer.MusicPlayerHelper
 import com.sildev.musicplayer.datalocal.DataManager
+import java.util.concurrent.ThreadPoolExecutor
 
 class MainPresenter(private val mainView: MainContract.View) : MainContract.Presenter {
 
@@ -24,7 +25,7 @@ class MainPresenter(private val mainView: MainContract.View) : MainContract.Pres
 
     override fun loadDataToSongList(context: Context) {
         val songList = MusicPlayerHelper.fetchSongFromStorage(context)
-        mainView.setDataToSongList(songList)
+        mainView.showListSong(songList)
     }
 
     override fun setRepeat() {

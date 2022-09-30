@@ -14,8 +14,8 @@ import java.util.regex.Pattern
 
 
 object MusicPlayerHelper {
-    fun fetchSongFromStorage(context: Context): List<Song> {
-        val songList: MutableList<Song> = ArrayList()
+    fun fetchSongFromStorage(context: Context): MutableList<Song> {
+        val songList = mutableListOf<Song>()
         val proj = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -71,7 +71,8 @@ object MusicPlayerHelper {
 
     fun removeAccent(s: String): String {
         val temp = Normalizer.normalize(s, Normalizer.Form.NFD)
-        return patternAccent.matcher(temp).replaceAll("").lowercase(Locale.getDefault())
+        return Pattern.compile(REGEX_ACCENT).matcher(temp).replaceAll("")
+            .lowercase(Locale.getDefault())
     }
 
     fun getBitmapSong(path: String): Bitmap? {

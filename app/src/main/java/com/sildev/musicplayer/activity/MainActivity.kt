@@ -7,10 +7,13 @@ import android.content.IntentFilter
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
+import com.bumptech.glide.Glide
 import com.sildev.musicplayer.*
 import com.sildev.musicplayer.MusicPlayerHelper.getBitmapSong
 import com.sildev.musicplayer.adapter.SongAdapter
@@ -21,9 +24,7 @@ import com.sildev.musicplayer.presenter.MainPresenter
 import com.sildev.musicplayer.service.PlaySongService
 import java.util.*
 
-class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickSongItem,
-    SearchView.OnQueryTextListener {
-
+class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryTextListener {
     private var backPressTime: Long = 0
     private lateinit var controlMusicBottomSheetDialog: ControlMusicBottomSheetDialog
     private lateinit var songAdapter: SongAdapter
@@ -34,7 +35,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
         )
     }
 
-    private var currentPlayList: List<Song> = ArrayList()
+    private var currentPlayList = mutableListOf<Song>()
     private var currentPositionSong: Int = -1
     private var mediaPlayer: MediaPlayer = MediaPlayer()
     private val mainPresenter: MainPresenter = MainPresenter(this)
@@ -74,7 +75,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
         super.onCreate(savedInstanceState)
         setContentView(mainBinding.root)
         initUI()
-        songAdapter = SongAdapter(this)
+        songAdapter = SongAdapter(::onClickItem)
         mainBinding.recyclerviewSong.adapter = songAdapter
         mainPresenter.loadDataToSongList(this)
         setOnCLickView()
@@ -109,7 +110,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
 
 
     private fun setImagePlayResource() {
-        val icon: Int = if (mediaPlayer.isPlaying) {
+        val icon = if (mediaPlayer.isPlaying) {
             R.drawable.ic_pause
         } else {
             R.drawable.ic_play
@@ -171,13 +172,13 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
     }
 
     private fun updatePlayer(song: Song) {
-        try {
-            mainBinding.imageSong.setImageBitmap(getBitmapSong(song.path))
-        } catch (e: java.lang.Exception) {
-            mainBinding.imageSong.setImageResource(R.drawable.ic_music)
+        Glide.with(this).load(MusicPlayerHelper.getBitmapSong(song.path))
+            .placeholder(R.drawable.ic_music).into(mainBinding.imageSong)
+        mainBinding.apply {
+            textSinger.text = song.singer
+            textTitle.text = song.name
         }
-        mainBinding.textSinger.text = song.singer
-        mainBinding.textTitle.text = song.name
+
         setImagePlayResource()
 
         controlMusicBottomSheetDialog.updateSong(song)
@@ -185,7 +186,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
         handlerUpdateSongTime.postDelayed(object : Runnable {
             override fun run() {
                 controlMusicBottomSheetDialog.updateCurrentTime(mediaPlayer.currentPosition)
-                handlerUpdateSongTime.postDelayed(this, 1000)
+                handlerUpdateSongTime.postDelayed(this, DELAY_UPDATE_TIME.toLong())
             }
 
         }, 1)
@@ -222,19 +223,19 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
     }
 
     override fun showMiniPlayer() {
-        mainBinding.layoutPlayer.visibility = View.VISIBLE
+        mainBinding.layoutPlayer.isVisible = true
     }
 
     override fun hideMiniPlayer() {
-        mainBinding.layoutPlayer.visibility = View.GONE
+        mainBinding.layoutPlayer.isVisible = false
     }
 
-    override fun setDataToSongList(list: List<Song>) {
+    override fun showListSong(list: MutableList<Song>) {
         songAdapter.setDataToList(list)
         currentPlayList = list
     }
 
-    override fun onClickItem(position: Int) {
+    fun onClickItem(position: Int) {
         currentPositionSong = position
         val currentSong = currentPlayList[currentPositionSong]
         val intentService = Intent(this, PlaySongService::class.java)
@@ -260,7 +261,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
     }
 
     override fun onBackPressed() {
-        if (backPressTime + 2000 > System.currentTimeMillis()) {
+        if (backPressTime + BACK_PRESS_DELAY_TIME > System.currentTimeMillis()) {
             super.onBackPressed()
             return
         } else {
@@ -270,21 +271,15 @@ class MainActivity : AppCompatActivity(), MainContract.View, SongAdapter.IClickS
 
     }
 
-    override fun onQueryTextSubmit(query: String?): Boolean {
-        if (query != null) {
-            songAdapter.searchSong(query.trim())
-        }
+    override fun onQueryTextSubmit(query: String): Boolean {
+        songAdapter.searchSong(query.trim())
         return true
     }
 
-    override fun onQueryTextChange(newText: String?): Boolean {
-        if (newText != null) {
-            songAdapter.searchSong(newText.trim())
-        }
+    override fun onQueryTextChange(newText: String): Boolean {
+        songAdapter.searchSong(newText.trim())
         return true
 
     }
-
-
 }
 

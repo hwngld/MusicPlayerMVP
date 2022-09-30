@@ -73,6 +73,4 @@ object DataManager {
         }
         return false
     }
-
-
 }

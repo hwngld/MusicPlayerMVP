@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.sildev.musicplayer.MusicPlayerHelper.parseLongToTime
@@ -20,6 +21,7 @@ class ControlMusicBottomSheetDialog(
     context: Context,
     private val mainPresenter: MainContract.Presenter,
 ) : BottomSheetDialog(context), SeekBar.OnSeekBarChangeListener {
+
     private val bottomSheetDialogBinding: BottomsheetControlMusicBinding by lazy {
         BottomsheetControlMusicBinding.inflate(
             layoutInflater,
@@ -57,25 +59,27 @@ class ControlMusicBottomSheetDialog(
     }
 
     private fun setOnClickView() {
-        bottomSheetDialogBinding.imageRepeat.setOnClickListener {
-            mainPresenter.setRepeat()
-            setIconRepeat()
-        }
-        bottomSheetDialogBinding.imageShuffle.setOnClickListener {
-            mainPresenter.setShuffle()
-            setIconShuffle()
-        }
-        bottomSheetDialogBinding.imagePrevious.setOnClickListener {
-            sendMusicBroadcast(ACTION_PREVIOUS)
-        }
-        bottomSheetDialogBinding.imageNext.setOnClickListener {
-            sendMusicBroadcast(ACTION_NEXT)
-        }
-        bottomSheetDialogBinding.imagePauseResume.setOnClickListener {
-            sendMusicBroadcast(ACTION_PAUSE)
-        }
-        bottomSheetDialogBinding.imageBack.setOnClickListener {
-            dismiss()
+        bottomSheetDialogBinding.apply {
+            imageRepeat.setOnClickListener {
+                mainPresenter.setRepeat()
+                setIconRepeat()
+            }
+            imageShuffle.setOnClickListener {
+                mainPresenter.setShuffle()
+                setIconShuffle()
+            }
+            imagePrevious.setOnClickListener {
+                sendMusicBroadcast(ACTION_PREVIOUS)
+            }
+            imageNext.setOnClickListener {
+                sendMusicBroadcast(ACTION_NEXT)
+            }
+            imagePauseResume.setOnClickListener {
+                sendMusicBroadcast(ACTION_PAUSE)
+            }
+            imageBack.setOnClickListener {
+                dismiss()
+            }
         }
         bottomSheetDialogBinding.seekbarTime.setOnSeekBarChangeListener(this)
 
@@ -87,28 +91,31 @@ class ControlMusicBottomSheetDialog(
     }
 
     private fun sendMusicBroadcast(action: String) {
-        val intent: Intent = Intent()
+        val intent = Intent()
         intent.action = action
         context.sendBroadcast(intent)
     }
 
 
     fun updateSong(song: Song) {
-        bottomSheetDialogBinding.seekbarTime.max = song.duration
-        bottomSheetDialogBinding.textTitle.text = song.name
-        bottomSheetDialogBinding.textSinger.text = song.singer
-        bottomSheetDialogBinding.textTotalTime.text = parseLongToTime(song.duration)
-        try {
-            bottomSheetDialogBinding.imageSong.setImageBitmap(MusicPlayerHelper.getBitmapSong(song.path))
-        } catch (e: java.lang.Exception) {
-            bottomSheetDialogBinding.imageSong.setImageResource(R.drawable.ic_music)
+        bottomSheetDialogBinding.apply {
+            seekbarTime.max = song.duration
+            textTitle.text = song.name
+            textSinger.text = song.singer
+            textTotalTime.text = parseLongToTime(song.duration)
+            Glide.with(context).load(MusicPlayerHelper.getBitmapSong(song.path))
+                .placeholder(R.drawable.ic_music).into(imageSong)
         }
+
     }
 
 
     fun updateCurrentTime(progress: Int) {
-        bottomSheetDialogBinding.seekbarTime.progress = progress
-        bottomSheetDialogBinding.textCurrentTime.text = parseLongToTime(progress)
+        bottomSheetDialogBinding.apply {
+            seekbarTime.progress = progress
+            textCurrentTime.text = parseLongToTime(progress)
+        }
+
     }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
