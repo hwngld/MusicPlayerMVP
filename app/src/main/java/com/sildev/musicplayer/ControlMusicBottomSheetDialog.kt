@@ -1,41 +1,84 @@
 package com.sildev.musicplayer
 
-import android.content.Context
-import android.content.Intent
+import android.app.Dialog
+import android.content.*
 import android.media.MediaPlayer
+import android.os.Bundle
+import android.os.Handler
 import android.widget.SeekBar
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sildev.musicplayer.MusicPlayerHelper.parseLongToTime
 import com.sildev.musicplayer.databinding.BottomsheetControlMusicBinding
 import com.sildev.musicplayer.model.Song
 import com.sildev.musicplayer.presenter.MainContract
 
 class ControlMusicBottomSheetDialog(
-    context: Context,
     private val mainPresenter: MainContract.Presenter,
-) : BottomSheetDialog(context), SeekBar.OnSeekBarChangeListener {
+) : BottomSheetDialogFragment(), SeekBar.OnSeekBarChangeListener {
 
     private val bottomSheetDialogBinding: BottomsheetControlMusicBinding by lazy {
         BottomsheetControlMusicBinding.inflate(
-            layoutInflater,
-            null,
-            false
+            layoutInflater, null, false
         )
     }
+    private val handlerUpdateTime = Handler()
     lateinit var mediaPlayer: MediaPlayer
+    private val musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                ACTION_PLAY -> {
+                    updateCurrentTime(0)
+                }
+                ACTION_PAUSE -> {
+                    setIconPauseResume()
+                }
+            }
 
-    init {
-        setContentView(bottomSheetDialogBinding.root)
-        val behavior = this.behavior
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(ACTION_PAUSE)
+        intentFilter.addAction(ACTION_PLAY)
+        context?.registerReceiver(musicReceiver, intentFilter)
+    }
+
+    override fun onDestroy() {
+        context?.unregisterReceiver(musicReceiver)
+        super.onDestroy()
+
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val bottomSheetDialog: BottomSheetDialog =
+            super.onCreateDialog(savedInstanceState) as BottomSheetDialog
+        val behavior = bottomSheetDialog.behavior
         behavior.isDraggable = false
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        bottomSheetDialog.setContentView(bottomSheetDialogBinding.root)
+        setDataBottomSheet()
+        handlerUpdateTime.postDelayed(object : Runnable {
+            override fun run() {
+                updateCurrentTime(mediaPlayer.currentPosition)
+                handlerUpdateTime.postDelayed(this, DELAY_UPDATE_TIME)
+            }
 
-        setIconRepeat()
+        }, 1)
+        return bottomSheetDialog
+    }
+
+
+    private fun setDataBottomSheet() {
         setIconShuffle()
+        setIconRepeat()
         setOnClickView()
     }
+
 
     private fun setIconShuffle() {
         if (mainPresenter.isShuffle()) {
@@ -45,6 +88,7 @@ class ControlMusicBottomSheetDialog(
         }
     }
 
+    //
     private fun setIconRepeat() {
         if (mainPresenter.isRepeat()) {
             bottomSheetDialogBinding.imageRepeat.setImageResource(R.drawable.ic_repeat_once)
@@ -80,17 +124,20 @@ class ControlMusicBottomSheetDialog(
 
     }
 
-    fun setIconPauseResume(icon: Int) {
+    fun setIconPauseResume() {
+        val icon = if (mediaPlayer.isPlaying) {
+            R.drawable.ic_pause
+        } else {
+            R.drawable.ic_play
+        }
         bottomSheetDialogBinding.imagePauseResume.setImageResource(icon)
-
     }
 
     private fun sendMusicBroadcast(action: String) {
         val intent = Intent()
         intent.action = action
-        context.sendBroadcast(intent)
+        context?.sendBroadcast(intent)
     }
-
 
     fun updateSong(song: Song) {
         bottomSheetDialogBinding.apply {
@@ -98,8 +145,10 @@ class ControlMusicBottomSheetDialog(
             textTitle.text = song.name
             textSinger.text = song.singer
             textTotalTime.text = parseLongToTime(song.duration)
-            Glide.with(context).load(MusicPlayerHelper.getBitmapSong(song.path))
-                .placeholder(R.drawable.ic_music).into(imageSong)
+            context?.let {
+                Glide.with(it).load(MusicPlayerHelper.getBitmapSong(song.path))
+                    .placeholder(R.drawable.ic_music).into(imageSong)
+            }
         }
 
     }

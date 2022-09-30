@@ -23,7 +23,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryTextListener {
     private var backPressTime: Long = 0
-    private lateinit var controlMusicBottomSheetDialog: ControlMusicBottomSheetDialog
+
     private lateinit var songAdapter: SongAdapter
     private lateinit var songSearchView: SearchView
     private val mainBinding: ActivityMainBinding by lazy {
@@ -31,10 +31,11 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
             layoutInflater
         )
     }
+    private lateinit var controlMusicBottomSheetDialog: ControlMusicBottomSheetDialog
 
     private var currentPlayList = mutableListOf<Song>()
     private var currentPositionSong: Int = -1
-    private var mediaPlayer: MediaPlayer = MediaPlayer()
+    var mediaPlayer: MediaPlayer = MediaPlayer()
     private val mainPresenter: MainPresenter = MainPresenter(this)
 
     private val musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -71,10 +72,11 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(mainBinding.root)
-        initUI()
+
         songAdapter = SongAdapter(::onClickItem)
         mainBinding.recyclerviewSong.adapter = songAdapter
         mainPresenter.loadDataToSongList(this)
+        controlMusicBottomSheetDialog = ControlMusicBottomSheetDialog(mainPresenter)
         setOnCLickView()
 
     }
@@ -85,9 +87,13 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
         }
 
         mainBinding.layoutPlayer.setOnClickListener {
-            controlMusicBottomSheetDialog.show()
-            controlMusicBottomSheetDialog.updateSong(currentPlayList[currentPositionSong])
-            controlMusicBottomSheetDialog.updateCurrentTime(mediaPlayer.currentPosition)
+            controlMusicBottomSheetDialog = ControlMusicBottomSheetDialog(mainPresenter)
+            controlMusicBottomSheetDialog.show(
+                supportFragmentManager, controlMusicBottomSheetDialog.tag
+            )
+            controlMusicBottomSheetDialog.mediaPlayer = mediaPlayer
+            val song = currentPlayList[currentPositionSong]
+            Handler().postDelayed(Runnable { controlMusicBottomSheetDialog.updateSong(song) }, 200)
         }
         mainBinding.imagePrevious.setOnClickListener {
             previousSong()
@@ -112,13 +118,9 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
         } else {
             R.drawable.ic_play
         }
-        controlMusicBottomSheetDialog.setIconPauseResume(icon)
         mainBinding.imagePauseResume.setImageResource(icon)
     }
 
-    private fun initUI() {
-        controlMusicBottomSheetDialog = ControlMusicBottomSheetDialog(this, mainPresenter)
-    }
 
     private fun nextSong() {
         if (currentPositionSong == currentPlayList.size - 1) {
@@ -166,6 +168,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
         updatePlayer(song)
         setOnCompletePlaySong()
         controlMusicBottomSheetDialog.mediaPlayer = mediaPlayer
+        controlMusicBottomSheetDialog.updateSong(song)
     }
 
     private fun updatePlayer(song: Song) {
@@ -175,19 +178,7 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
             textSinger.text = song.singer
             textTitle.text = song.name
         }
-
         setImagePlayResource()
-
-        controlMusicBottomSheetDialog.updateSong(song)
-        val handlerUpdateSongTime = Handler()
-        handlerUpdateSongTime.postDelayed(object : Runnable {
-            override fun run() {
-                controlMusicBottomSheetDialog.updateCurrentTime(mediaPlayer.currentPosition)
-                handlerUpdateSongTime.postDelayed(this, DELAY_UPDATE_TIME.toLong())
-            }
-
-        }, 1)
-
     }
 
     private fun pauseOrResume() {
@@ -232,14 +223,18 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
         currentPlayList = list
     }
 
-    fun onClickItem(position: Int) {
+    private fun onClickItem(position: Int) {
+        mainPresenter.setPositionSong(position)
+        controlMusicBottomSheetDialog = ControlMusicBottomSheetDialog(mainPresenter)
+        controlMusicBottomSheetDialog.show(
+            supportFragmentManager, controlMusicBottomSheetDialog.tag
+        )
         currentPositionSong = position
         val currentSong = currentPlayList[currentPositionSong]
         val intentService = Intent(this, PlaySongService::class.java)
         intentService.putExtra("currentSong", currentSong)
         startService(intentService)
         sendPlayBroadcast()
-        mainPresenter.setPositionSong(position)
     }
 
     override fun onResume() {
@@ -248,13 +243,14 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         unregisterReceiver(musicReceiver)
         mainPresenter.setPlaying(false)
         mainPresenter.setPositionSong(-1)
         mediaPlayer.stop()
         mediaPlayer.release()
         stopService(Intent(this, PlaySongService::class.java))
+        super.onDestroy()
+
     }
 
     override fun onBackPressed() {

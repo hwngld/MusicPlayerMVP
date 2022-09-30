@@ -14,7 +14,7 @@ import com.sildev.musicplayer.model.Song
 class SongAdapter(private val onClickItem: (Int) -> Unit) :
     RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
 
-    private var _listSong: List<Song> = ArrayList()
+    private var _listSong = listOf<Song>()
     private var resultSongList = mutableListOf<Song>()
 
 
