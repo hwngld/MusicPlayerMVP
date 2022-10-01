@@ -18,6 +18,8 @@ import com.sildev.musicplayer.databinding.ActivityMainBinding
 import com.sildev.musicplayer.model.Song
 import com.sildev.musicplayer.presenter.MainContract
 import com.sildev.musicplayer.presenter.MainPresenter
+import com.sildev.musicplayer.repository.MusicRepository
+import com.sildev.musicplayer.repository.local.MusicLocalDataSource
 import com.sildev.musicplayer.service.PlaySongService
 import java.util.*
 
@@ -36,7 +38,11 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
     private var currentPlayList = mutableListOf<Song>()
     private var currentPositionSong: Int = -1
     var mediaPlayer: MediaPlayer = MediaPlayer()
-    private val mainPresenter: MainPresenter = MainPresenter(this)
+    private val mainPresenter: MainPresenter = MainPresenter(
+        this, MusicRepository.getInstance(
+            MusicLocalDataSource.getInstance()
+        )
+    )
 
     private val musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -275,4 +281,3 @@ class MainActivity : AppCompatActivity(), MainContract.View, SearchView.OnQueryT
 
     }
 }
-

@@ -1,10 +1,17 @@
 package com.sildev.musicplayer.presenter
 
 import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import com.sildev.musicplayer.MusicPlayerHelper
 import com.sildev.musicplayer.datalocal.DataManager
+import com.sildev.musicplayer.model.Song
+import com.sildev.musicplayer.repository.MusicRepository
+import com.sildev.musicplayer.repository.local.OnResultListener
 
-class MainPresenter(private val mainView: MainContract.View) : MainContract.Presenter {
+class MainPresenter(
+    private val mainView: MainContract.View, private val musicRepository: MusicRepository
+) : MainContract.Presenter {
 
     override fun showOrHideMiniPlayer() {
         if (getPositionSong() >= 0) {
@@ -23,8 +30,16 @@ class MainPresenter(private val mainView: MainContract.View) : MainContract.Pres
     }
 
     override fun loadDataToSongList(context: Context) {
-        val songList = MusicPlayerHelper.fetchSongFromStorage(context)
-        mainView.showListSong(songList)
+        musicRepository.getMusicsLocal(context, object : OnResultListener<MutableList<Song>> {
+            override fun onSuccess(data: MutableList<Song>) {
+                mainView.showListSong(data)
+            }
+
+            override fun onError(exception: Exception?) {
+                Log.e("errorLoadDataToSongList", exception?.message.toString())
+            }
+        })
+
     }
 
     override fun setRepeat() {
@@ -49,5 +64,4 @@ class MainPresenter(private val mainView: MainContract.View) : MainContract.Pres
     override fun setPositionSong(position: Int) {
         DataManager.setPosition(position)
     }
-
 }
